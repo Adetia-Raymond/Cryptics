@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/cryptics-backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/cryptics-frontend/cryptics"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
