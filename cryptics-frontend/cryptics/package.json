@@ -1,0 +1,28 @@
+{
+  "name": "cryptics",
+  "version": "1.0.0",
+  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:mobile": "turbo run dev --filter=mobile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/axios": "^0.9.36",
+    "turbo": "^2.6.1"
+  },
+  "dependencies": {
+    "@park-ui/tailwind-plugin": "^0.20.1",
+    "axios": "^1.13.2",
+    "js-cookie": "^3.0.5",
+    "react-native-svg": "15.12.1"
+  }
+}
