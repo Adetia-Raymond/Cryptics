@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, Alert, StyleSheet, SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import BottomNav from '../components/BottomNav';
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -144,6 +145,8 @@ export default function SettingsScreen() {
           <Text style={{ color: '#EF4444', marginLeft: 8, fontWeight: '700' }}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+      
+      <BottomNav />
     </SafeAreaView>
   );
 }

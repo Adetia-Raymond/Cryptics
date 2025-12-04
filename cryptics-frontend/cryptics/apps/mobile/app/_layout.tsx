@@ -71,15 +71,8 @@ function InnerApp() {
 }
 
 function DebugBanner() {
-  const { lastRefreshAt, lastRefreshError } = useAuth();
-  if (!lastRefreshAt && !lastRefreshError) return null;
-  return (
-    <View style={{ position: 'absolute', top: 44, left: 12, right: 12, zIndex: 9999 }}>
-      <View style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: 8, borderRadius: 8 }}>
-        <Text style={{ color: '#fff', fontSize: 12 }}>{lastRefreshError ? `Refresh error: ${lastRefreshError}` : `Last refresh: ${new Date(lastRefreshAt!).toLocaleTimeString()}`}</Text>
-      </View>
-    </View>
-  );
+  // Hide the debug banner for release / cleaner UI
+  return null;
 }
 
 const styles = StyleSheet.create({

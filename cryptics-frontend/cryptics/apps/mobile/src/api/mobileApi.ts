@@ -108,6 +108,9 @@ export async function clearTokens() {
   await storageDelete(REFRESH_KEY);
 }
 
+// Mutex to prevent multiple concurrent refresh calls (race condition)
+let refreshPromise: Promise<Tokens> | null = null;
+
 async function postJSON(path: string, body: any, opts: RequestInit = {}) {
   // Build payload while being tolerant of accidentally double-stringified input.
   let payload: string;
@@ -184,31 +187,48 @@ export async function register(payload: { name?: string; username?: string; emai
   return json;
 }
 
-export async function refresh() {
-  // Mobile refresh uses the mobile-friendly endpoint that accepts a refresh token in the body
-  // Endpoint: POST /auth/refresh_mobile { refresh_token }
-  const refreshToken = await getRefreshToken();
-  if (!refreshToken) throw new Error('no refresh token available');
+export async function refresh(): Promise<Tokens> {
+  // Use a mutex to prevent multiple concurrent refresh calls.
+  // If a refresh is already in progress, wait for it instead of firing another request.
+  // This prevents race conditions where the old token gets blacklisted before all callers
+  // get the new token, causing "Refresh token revoked" errors.
+  if (refreshPromise) {
+    console.debug('[mobileApi] refresh() already in progress, waiting...');
+    return refreshPromise;
+  }
 
-  // Dev debug: show masked token info (do NOT log full tokens in production)
-  try {
-    const masked = `${refreshToken.slice(0, 6)}...${refreshToken.slice(-6)}`;
-    console.debug('[mobileApi] refresh() found refresh token length=', refreshToken.length, 'masked=', masked);
-  } catch (e) {}
+  refreshPromise = (async () => {
+    // Mobile refresh uses the mobile-friendly endpoint that accepts a refresh token in the body
+    // Endpoint: POST /auth/refresh_mobile { refresh_token }
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) throw new Error('no refresh token available');
 
-  try {
-    const json = await postJSON('/auth/refresh_mobile', { refresh_token: refreshToken });
-    console.debug('[mobileApi] refresh() server response', json);
-    const tokens: Tokens = { accessToken: json.access_token || json.accessToken };
-    if (json.refresh_token) tokens.refreshToken = json.refresh_token;
-    await saveTokens(tokens);
-    return tokens;
-  } catch (e: any) {
-    // Surface server response details to help debugging (dev only)
+    // Dev debug: show masked token info (do NOT log full tokens in production)
     try {
-      console.error('[mobileApi] refresh() failed', e?.status || e, e?.body || e?.message || e);
-    } catch (err) {}
-    throw e;
+      const masked = `${refreshToken.slice(0, 6)}...${refreshToken.slice(-6)}`;
+      console.debug('[mobileApi] refresh() found refresh token length=', refreshToken.length, 'masked=', masked);
+    } catch (e) {}
+
+    try {
+      const json = await postJSON('/auth/refresh_mobile', { refresh_token: refreshToken });
+      console.debug('[mobileApi] refresh() server response', json);
+      const tokens: Tokens = { accessToken: json.access_token || json.accessToken };
+      if (json.refresh_token) tokens.refreshToken = json.refresh_token;
+      await saveTokens(tokens);
+      return tokens;
+    } catch (e: any) {
+      // Surface server response details to help debugging (dev only)
+      try {
+        console.error('[mobileApi] refresh() failed', e?.status || e, e?.body || e?.message || e);
+      } catch (err) {}
+      throw e;
+    }
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
   }
 }
 

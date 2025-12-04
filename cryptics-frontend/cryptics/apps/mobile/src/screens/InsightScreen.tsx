@@ -4,6 +4,7 @@ import { LineChart } from 'react-native-gifted-charts';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import BottomNav from '../components/BottomNav';
 
 const { width } = Dimensions.get('window');
 
@@ -249,6 +250,8 @@ const InsightScreen: React.FC = () => {
         {activeTab === 'sentiment' && renderSentimentTab()}
         {activeTab === 'ai' && renderAIRecommendationTab()}
       </View>
+      
+      <BottomNav />
     </SafeAreaView>
   );
 };
