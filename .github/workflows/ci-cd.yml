@@ -110,7 +110,8 @@ jobs:
     - name: Install Expo CLI
       run: npm install -g @expo/cli
     
-    - name: Check Expo project
+    - name: Fix and check Expo project
       run: |
         cd cryptics-frontend/cryptics/apps/mobile
-        npx expo install --check
+        npx expo install --fix
+        npx expo doctor
