@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@cryptics/api": ["../../packages/api/src"],
+      "@cryptics/utils": ["../../packages/utils/src"],
+      "@cryptics/ui": ["../../packages/ui/src"],
+      "@cryptics/config": ["../../packages/config/src"],
+      "@/*": ["./app/*"],
+        "lightweight-charts": ["../../node_modules/lightweight-charts/dist/typings.d.ts"],
+      "lightweight-charts/*": ["../../node_modules/lightweight-charts/dist/*"]
+    }
+  },
+
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+
+  "exclude": ["node_modules"]
+}
