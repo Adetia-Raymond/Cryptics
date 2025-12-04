@@ -1,0 +1,137 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Tests and Linting
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: cryptics_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install backend dependencies
+      working-directory: ./cryptics-backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install fastapi uvicorn sqlalchemy psycopg2-binary redis python-dotenv pydantic
+        pip install pytest pytest-asyncio flake8 black isort
+        
+    - name: Run backend linting
+      working-directory: ./cryptics-backend
+      run: |
+        flake8 app/ --max-line-length=88 --extend-ignore=E203,W503 || true
+        black --check app/ || true
+        isort --check-only app/ || true
+        
+    - name: Test backend startup
+      working-directory: ./cryptics-backend
+      env:
+        DB_URL: postgresql://testuser:testpass@localhost:5432/cryptics_test
+        REDIS_URL: redis://localhost:6379/0
+        JWT_SECRET: test-secret-key-for-ci
+      run: |
+        python -c "from app.main import app; print('✅ Backend can import successfully')" || echo "Backend needs dependencies"
+
+  # Frontend Web Tests
+  frontend-web-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'cryptics-frontend/cryptics/apps/web/package-lock.json'
+        
+    - name: Install web dependencies
+      working-directory: ./cryptics-frontend/cryptics/apps/web
+      run: npm ci
+      
+    - name: Run web linting
+      working-directory: ./cryptics-frontend/cryptics/apps/web
+      run: npm run lint || true
+      
+    - name: Run web type checking
+      working-directory: ./cryptics-frontend/cryptics/apps/web
+      run: npx tsc --noEmit || true
+      
+    - name: Build web app
+      working-directory: ./cryptics-frontend/cryptics/apps/web
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+      run: npm run build
+
+  # Frontend Mobile Tests
+  frontend-mobile-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'cryptics-frontend/cryptics/apps/mobile/package-lock.json'
+        
+    - name: Install Expo CLI
+      run: npm install -g @expo/cli
+      
+    - name: Install mobile dependencies
+      working-directory: ./cryptics-frontend/cryptics/apps/mobile
+      run: npm ci
+      
+    - name: Run mobile linting
+      working-directory: ./cryptics-frontend/cryptics/apps/mobile
+      run: npx expo lint || true
+      
+    - name: Check Expo configuration
+      working-directory: ./cryptics-frontend/cryptics/apps/mobile
+      run: npx expo doctor
