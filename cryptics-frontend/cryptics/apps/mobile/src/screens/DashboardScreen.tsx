@@ -378,7 +378,22 @@ function MarketRow({ item, text, muted, cardBg, border }: any) {
     0;
   const isPos = Number(change) >= 0;
   const marketCap = item?.market_cap ?? item?.market_cap_usd ?? null;
+  const volume = item?.volume_24h ?? item?.volume ?? item?.quote_volume ?? null;
   const rowBg = cardBg || "transparent";
+  
+  // Generate a vibrant color based on symbol
+  const symbolColors = ['#8B5CF6', '#06B6D4', '#F59E0B', '#10B981', '#EF4444', '#EC4899', '#6366F1', '#14B8A6'];
+  const symbolHash = (item?.symbol || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const badgeColor = symbolColors[symbolHash % symbolColors.length];
+  
+  // Format large numbers
+  const formatVolume = (vol: number) => {
+    if (vol >= 1e9) return `$${(vol / 1e9).toFixed(2)}B`;
+    if (vol >= 1e6) return `$${(vol / 1e6).toFixed(2)}M`;
+    if (vol >= 1e3) return `$${(vol / 1e3).toFixed(2)}K`;
+    return `$${vol.toFixed(2)}`;
+  };
+  
   return (
     <View
       style={[
@@ -389,24 +404,26 @@ function MarketRow({ item, text, muted, cardBg, border }: any) {
       <View
         style={{
           marginRight: 12,
-          width: 44,
-          height: 44,
-          borderRadius: 10,
+          width: 48,
+          height: 48,
+          borderRadius: 12,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "rgba(255,255,255,0.02)",
+          backgroundColor: `${badgeColor}20`,
+          borderWidth: 2,
+          borderColor: `${badgeColor}40`,
         }}
       >
-        <Text style={{ color: text, fontWeight: "800" }}>
+        <Text style={{ color: badgeColor, fontWeight: "900", fontSize: 13 }}>
           {(item?.symbol || "").replace(/USDT$/i, "")}
         </Text>
       </View>
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={{ color: text, fontWeight: "700" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={{ color: text, fontWeight: "700", fontSize: 15 }}>
             {item?.name || item?.symbol}
           </Text>
-          <Text style={{ color: text, fontWeight: "700" }}>
+          <Text style={{ color: text, fontWeight: "800", fontSize: 15 }}>
             {price ? "$" + Number(price).toLocaleString() : "--"}
           </Text>
         </View>
@@ -414,16 +431,30 @@ function MarketRow({ item, text, muted, cardBg, border }: any) {
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            marginTop: 6,
+            marginTop: 4,
+            alignItems: "center",
           }}
         >
-          <Text style={{ color: muted }}>
-            {marketCap ? `MC ${Number(marketCap).toLocaleString()}` : ""}
-          </Text>
-          <Text style={{ color: isPos ? "#10B981" : "#EF4444" }}>
-            {isPos ? "+" : ""}
-            {Number(change).toFixed(2)}%
-          </Text>
+          <View>
+            <Text style={{ color: muted, fontSize: 12 }}>
+              {marketCap ? `MC $${(Number(marketCap) / 1e9).toFixed(2)}B` : ""}
+            </Text>
+            {volume ? (
+              <Text style={{ color: muted, fontSize: 11, marginTop: 2 }}>
+                Vol {formatVolume(Number(volume))}
+              </Text>
+            ) : null}
+          </View>
+          <View style={{
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+            borderRadius: 6,
+            backgroundColor: isPos ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          }}>
+            <Text style={{ color: isPos ? "#10B981" : "#EF4444", fontWeight: "700", fontSize: 12 }}>
+              {isPos ? "▲" : "▼"} {Math.abs(Number(change)).toFixed(2)}%
+            </Text>
+          </View>
         </View>
       </View>
     </View>
