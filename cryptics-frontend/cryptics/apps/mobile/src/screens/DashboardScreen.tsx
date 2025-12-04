@@ -171,7 +171,7 @@ export default function DashboardScreen() {
               }}
               onPress={() => onRefresh()}
             >
-              <Text style={{ color: "#e6c2ffff" }}>Refresh</Text>
+              <Text style={{ color: text }}>Refresh</Text>
             </TouchableOpacity>
           </View>
           <View>
@@ -270,7 +270,7 @@ function HighlightCard({ data, text, muted, tint }: any) {
               flexShrink: 0,
             }}
           >
-            <Text style={{ color: text, fontWeight: "900", fontSize: 12 }}>
+            <Text style={{ color: '#fff', fontWeight: "900", fontSize: 12 }}>
               {(summary?.symbol || "BTCUSDT").replace(/USDT$/i, "")}
             </Text>
           </View>
