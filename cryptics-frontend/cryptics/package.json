@@ -16,7 +16,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/axios": "^0.9.36",
+    "@types/axios": "^0.14.4",
     "turbo": "^2.6.1"
   },
   "dependencies": {
